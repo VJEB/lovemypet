@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import Pet from "../models/pet.model";
-import User from "../models/user.model";
+import Pet from "../models/pet.model.js";
+import User from "../models/user.model.js";
 
 export const createPet = async (req: Request, res: Response): Promise<void> => {
   try {

@@ -6,13 +6,16 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
-export const registerUser = async (req: Request, res: Response) => {
+export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password, phoneNumber, profilePicture } = req.body;
 
     // Check if user exists
     let user = await User.findOne({ email });
-    if (user) return res.status(400).json({ message: 'User already exists' });
+    if (user) {
+        res.status(400).json({ message: 'User already exists' });
+        return 
+    }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -30,15 +33,21 @@ export const registerUser = async (req: Request, res: Response) => {
   }
 };
 
-export const loginUser = async (req: Request, res: Response) => {
+export const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+    if (!user){
+        res.status(400).json({ message: 'User not found.' });
+        return 
+    } 
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+    if (!isMatch) {
+        res.status(401).json({ message: 'Invalid credentials.' });
+        return 
+    }
 
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
 
@@ -65,7 +74,8 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const updatedUser = await User.findByIdAndUpdate(id, req.body, {
+    const { user, password } = req.body;
+    const updatedUser = await User.findByIdAndUpdate(id, user, {
       new: true,
     });
     if (!updatedUser) {

@@ -30,7 +30,6 @@
 </template>
 
 <script setup>
-import { defineProps } from "vue";
 import { MapPin } from "lucide-vue-next";
 
 const props = defineProps({

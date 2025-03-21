@@ -23,7 +23,7 @@
           </button>
         </div>
         <h2 class="text-xl font-bold">Kristin Watson</h2>
-        <p class="text-gray-500 text-sm">Pet Lover • New York, USA</p>
+        <p class="text-gray-500 text-sm">New York, USA</p>
       </div>
 
       <!-- Contact Information -->
@@ -47,7 +47,7 @@
       <div class="rounded-xl border border-gray-100 overflow-hidden mb-4">
         <div class="divide-y">
           <router-link
-            to="/auth/register"
+            to="/profile/form"
             class="flex items-center justify-between p-2 hover:bg-gray-50"
           >
             <div class="flex items-center">
@@ -76,6 +76,7 @@
       <!-- Delete Account -->
       <div class="mb-8">
         <button
+            @click="deleteAccount()"
           class="w-full flex items-center justify-center gap-2 p-2 border border-red-200 rounded-xl text-red-600 hover:bg-red-50"
         >
           <Trash2 class="h-5 w-5" />
@@ -90,6 +91,7 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
 import {
   ArrowLeft,
   MoreVertical,
@@ -100,4 +102,33 @@ import {
   Pencil
 } from "lucide-vue-next";
 import BottomNavBar from "../components/BottomNavBar.vue";
+import { store } from "@/storage/user-store.ts"
+
+const error = ref("");
+const isLoading = ref(false);
+
+const deleteAccount = async () => {
+  error.value = "";
+  isLoading.value = true;
+
+  try {
+    const response = await fetch(`http://localhost:3000/users/${store.user._id}`, {
+      method: "DELETE"
+    });
+
+    if (!response.ok) {
+      throw new Error("Couldn't delete account");
+    }
+
+    const data = await response.json();
+    console.log("Account deleted succesfully:", data);
+
+    // Handle successful login (e.g., save token, redirect, etc.)
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    isLoading.value = false;
+  }
+};
+
 </script>

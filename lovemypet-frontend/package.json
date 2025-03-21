@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^1.16.8",
     "@tailwindcss/vite": "^4.0.14",
     "@vueuse/core": "^13.0.0",
     "class-variance-authority": "^0.7.1",

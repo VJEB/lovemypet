@@ -6,6 +6,10 @@ import LoginView from "./pages/Login.vue";
 import RegisterView from "./pages/Register.vue";
 import ProfileView from "./pages/Profile.vue";
 
+const isAuthenticated = () => {
+  return !!localStorage.getItem('token');
+};
+
 const routes = [
   {
     path: "/",
@@ -31,9 +35,26 @@ const routes = [
     path: "/profile",
     component: ProfileView,
   },
+  {
+    path: "/profile/form",
+    component: RegisterView,
+  },
 ];
 
 export const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+    // If the user is trying to access a protected route and is not authenticated
+    if (to.path === "/auth" || to.path === "/auth/register") {
+        next(); // Allow navigation
+        return;
+    }
+    if (!isAuthenticated()) {
+        next("/auth");
+        return;
+    }
+    next();
 });

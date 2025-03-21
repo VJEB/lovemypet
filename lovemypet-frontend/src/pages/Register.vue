@@ -2,8 +2,8 @@
   <div class="flex justify-center items-center min-h-screen p-4">
     <Card class="w-full max-w-md">
       <CardHeader>
-        <CardTitle class="text-2xl">Create an account</CardTitle>
-        <CardDescription>Enter your information to register</CardDescription>
+        <CardTitle class="text-2xl">{{ isRegistering ? "Create an account" : "Profile data" }}</CardTitle>
+        <CardDescription v-if="isRegistering">Enter your information to register</CardDescription>
       </CardHeader>
       <form @submit.prevent="handleSubmit">
         <CardContent class="space-y-4">
@@ -13,7 +13,7 @@
           </Alert>
           <div class="space-y-2">
             <div class="flex items-center justify-between">
-                <Label for="name">Name</Label>
+              <Label for="name">Name</Label>
             </div>
             <Input
               id="name"
@@ -24,7 +24,7 @@
           </div>
           <div class="space-y-2">
             <div class="flex items-center justify-between">
-                <Label for="email">Email</Label>
+              <Label for="email">Email</Label>
             </div>
             <Input
               id="email"
@@ -34,9 +34,9 @@
               required
             />
           </div>
-          <div class="space-y-2">
+          <div v-if="isRegistering" class="space-y-2">
             <div class="flex items-center justify-between">
-                <Label for="password">Password</Label>
+              <Label for="password">Password</Label>
             </div>
             <Input
               id="password"
@@ -47,7 +47,7 @@
           </div>
           <div class="space-y-2">
             <div class="flex items-center justify-between">
-                <Label for="phoneNumber">Phone Number</Label>
+              <Label for="phoneNumber">Phone Number</Label>
             </div>
             <Input
               id="phoneNumber"
@@ -57,12 +57,24 @@
               required
             />
           </div>
+          <GoogleMap />
         </CardContent>
         <CardFooter class="flex flex-col space-y-4">
           <Button class="w-full" type="submit" :disabled="isLoading">
-            {{ isLoading ? "Creating account..." : "Register" }}
+            {{
+              isLoading
+                ? isRegistering
+                  ? "Creating account..."
+                  : "Saving..."
+                : isRegistering
+                ? "Register"
+                : "Save"
+            }}
           </Button>
-          <p class="text-sm text-center text-muted-foreground">
+          <p
+            v-if="isRegistering"
+            class="text-sm text-center text-muted-foreground"
+          >
             Already have an account?
             <Button variant="link" class="p-0 h-auto" type="button"
               >Log in</Button
@@ -75,7 +87,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import {
   Card,
   CardHeader,
@@ -89,13 +101,22 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-vue-next";
+import { useRoute } from "vue-router";
+import { store } from "@/storage/user-store.ts";
+import GoogleMap from '@/components/GoogleMap.vue'
 
 const formData = ref({
-  name: "",
-  email: "",
+  name: store.user.name,
+  email: store.user.email,
   password: "",
-  phoneNumber: "",
+  phoneNumber: store.user.phoneNumber,
 });
+
+const route = useRoute();
+
+const isRegistering = computed(
+  () => route.path === "/auth/register" && !store.user.name
+);
 
 const error = ref("");
 const isLoading = ref(false);
@@ -105,7 +126,7 @@ const handleSubmit = async () => {
   isLoading.value = true;
   try {
     console.log(formData.value);
-    
+
     const response = await fetch("http://localhost:3000/users", {
       method: "POST",
       headers: {
@@ -120,7 +141,7 @@ const handleSubmit = async () => {
 
     const data = await response.json();
     console.log("Login successful:", data);
-    router.push('/');
+    router.push("/");
   } catch (err) {
     error.value = "Registration failed. Please try again.";
   } finally {

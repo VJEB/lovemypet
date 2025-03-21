@@ -27,7 +27,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     // Generate token
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
 
-    res.status(201).json({ token, user });
+    res.status(201).json({ token, user: { ...user, location: user.location.coordinates } });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -51,7 +51,9 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
 
-    res.json({ token, user });
+    const { password: userPassword, __v, ...userData } = user;
+
+    res.json({ token, userData: { ...userData, location: userData.location.coordinates } });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -65,7 +67,9 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
       res.status(404).json({ error: "User not found" });
       return;
     }
-    res.status(200).json(user);
+    const { password: userPassword, __v, ...userData } = user;
+
+    res.status(200).json({ ...userData, location: userData.location.coordinates });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -82,7 +86,9 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
         res.status(404).json({ error: "User not found" });
         return;
     }
-    res.status(200).json(updatedUser);
+    const { password: userPassword, __v, ...userData } = updatedUser;
+
+    res.status(200).json({ ...userData, location: userData.location.coordinates });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

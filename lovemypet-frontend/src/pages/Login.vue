@@ -63,6 +63,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle } from "lucide-vue-next";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { store } from "@/storage/user-store.ts"
 
 const email = ref("");
 const password = ref("");
@@ -90,7 +91,9 @@ const handleSubmit = async () => {
     }
 
     const data = await response.json();
-    console.log("Login successful:", data);
+    console.log(data);    
+    localStorage.setItem('token', data.token)
+    store.setUser(data.user)
 
     // Handle successful login (e.g., save token, redirect, etc.)
   } catch (err) {

@@ -8,7 +8,7 @@
     >
         <ArrowLeft/>
     </button>
-    <h1 className="text-lg font-medium text-gray-800 ">Cat Category</h1>
+    <!-- <h1 className="text-lg font-medium text-gray-800 ">Cat Category</h1> -->
     <!-- <button @click="goBack" class="text-gray-600 hover:text-gray-800 mr-4">
         <ArrowLeft/>
     </button> -->

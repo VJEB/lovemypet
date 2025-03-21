@@ -1,15 +1,17 @@
 <!-- Pet grid -->
 <template>
-  <Header />
   <div class="grid grid-cols-2 gap-4 w-[100%] my-10">
     <PetCard
       v-for="pet in pets"
-      :id="pet.id"
+      :id="pet._id"
       :name="pet.name"
       :breed="pet.breed"
       :distance="pet.distance"
       :status="pet.status"
-      :image="pet.image"
+      :description="pet.description"
+      :category="pet.category"
+      :petView="false"
+      :image="'https://placehold.co/600x400'"
     />
   </div>
   <ArcMenu />
@@ -17,6 +19,7 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted  } from "vue";
 import { RouterLink } from "vue-router";
 import PetCard from "../components/PetCard.vue";
 import BottomNavBar from "../components/BottomNavBar.vue";
@@ -31,95 +34,32 @@ import {
   User,
 } from "lucide-vue-next";
 
-const pets = [
-  // Same pets array as in React version
-  {
-    id: 1,
-    name: "Blue Ice",
-    breed: "Chinchilla",
-    distance: "1.8km",
-    status: "ADOPTION",
-    statusColor: "bg-purple-100 text-purple-600",
-    image: "https://placehold.co/600x400",
-  },
-  {
-    id: 2,
-    name: "Blue Ice",
-    breed: "Chinchilla",
-    distance: "1.8km",
-    status: "ADOPTION",
-    statusColor: "bg-purple-100 text-purple-600",
-    image: "https://placehold.co/600x400",
-  },
-  {
-    id: 3,
-    name: "Blue Ice",
-    breed: "Chinchilla",
-    distance: "1.8km",
-    status: "ADOPTION",
-    statusColor: "bg-purple-100 text-purple-600",
-    image: "https://placehold.co/600x400",
-  },
-  {
-    id: 4,
-    name: "Blue Ice",
-    breed: "Chinchilla",
-    distance: "1.8km",
-    status: "ADOPTION",
-    statusColor: "bg-purple-100 text-purple-600",
-    image: "https://placehold.co/600x400",
-  },
-  {
-    id: 5,
-    name: "Blue Ice",
-    breed: "Chinchilla",
-    distance: "1.8km",
-    status: "ADOPTION",
-    statusColor: "bg-purple-100 text-purple-600",
-    image: "https://placehold.co/600x400",
-  },
-  {
-    id: 6,
-    name: "Blue Ice",
-    breed: "Chinchilla",
-    distance: "1.8km",
-    status: "ADOPTION",
-    statusColor: "bg-purple-100 text-purple-600",
-    image: "https://placehold.co/600x400",
-  },
-  {
-    id: 7,
-    name: "Blue Ice",
-    breed: "Chinchilla",
-    distance: "1.8km",
-    status: "ADOPTION",
-    statusColor: "bg-purple-100 text-purple-600",
-    image: "https://placehold.co/600x400",
-  },
-  {
-    id: 8,
-    name: "Blue Ice",
-    breed: "Chinchilla",
-    distance: "1.8km",
-    status: "ADOPTION",
-    statusColor: "bg-purple-100 text-purple-600",
-    image: "https://placehold.co/600x400",
-  },
-  {
-    id: 9,
-    name: "Blue Ice",
-    breed: "Chinchilla",
-    distance: "1.8km",
-    status: "ADOPTION",
-    statusColor: "bg-purple-100 text-purple-600",
-    image: "https://placehold.co/600x400",
-  },
-  // ... rest of the pet objects
-];
+const pets = ref([]);
+const fetchPets = async () => {
+  try {
+    const response = await fetch(`http://localhost:3000/pets/pets`, {  // La ruta correcta es /pets
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    pets.value = data;  // Llenar la constante pets con los datos obtenidos
+    const dataFilter = JSON.parse(localStorage.getItem('dataFilter')) || {};
+    console.log('DataFilter', dataFilter)
+    if(dataFilter.length){
+      pets.value = dataFilter;
+    }
 
-const categories = [
-  { id: "adoption", name: "Adoption", active: false },
-  { id: "disappear", name: "Disappear", active: false },
-  { id: "mating", name: "Mating", active: false },
-];
+  } catch (err) {
+    console.error('Error', err.message);
+  }
+};
+
+
+
+onMounted(() => {
+    fetchPets();
+});
+
 </script>

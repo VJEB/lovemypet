@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password, phoneNumber, profilePicture } = req.body;
-
+    console.log('Paso aqui')
     // Check if user exists
     let user = await User.findOne({ email });
     if (user) {
@@ -27,7 +27,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     // Generate token
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
 
-    res.status(201).json({ token, user: { ...user, location: user.location.coordinates } });
+    res.status(201).json({ token, user: { ...user, location: [] } });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -52,8 +52,14 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
 
     const { password: userPassword, __v, ...userData } = user;
+    const infoUser = {
+     id: user._id,
+     name: user.name,
+     email: user.email,
+     phoneNumber: user.phoneNumber,
+    }
 
-    res.json({ token, userData: { ...userData, location: userData.location.coordinates } });
+    res.json({ token, userData: { ...userData, location: [], data: infoUser} });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -69,7 +75,7 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
     }
     const { password: userPassword, __v, ...userData } = user;
 
-    res.status(200).json({ ...userData, location: userData.location.coordinates });
+    res.status(200).json({ ...userData, location: [] });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -78,8 +84,7 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { user, password } = req.body;
-    const updatedUser = await User.findByIdAndUpdate(id, user, {
+    const updatedUser = await User.findByIdAndUpdate(id, req.body, {
       new: true,
     });
     if (!updatedUser) {
@@ -88,7 +93,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     }
     const { password: userPassword, __v, ...userData } = updatedUser;
 
-    res.status(200).json({ ...userData, location: userData.location.coordinates });
+    res.status(200).json({ ...userData, location: [] });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

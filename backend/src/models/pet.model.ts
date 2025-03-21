@@ -1,23 +1,24 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IPet extends Document {
+  id?: string;
   name: string;
   breed: string;
   status: string;
-  images: string[];
+  images?: string[];
   description: string;
   category: 'Dog' | 'Cat';
-  owner: mongoose.Types.ObjectId;
+  owner?: mongoose.Types.ObjectId;
 }
 
 const PetSchema: Schema = new Schema({
-  name: { type: String, required: true },
-  breed: { type: String, required: true },
-  status: { type: String, required: true },
+  name: { type: String,  },
+  breed: { type: String,  },
+  status: { type: String,  },
   images: [{ type: String }],
   description: { type: String },
-  category: { type: String, required: true },
-  owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  category: { type: String, },
+  owner: { type: Schema.Types.ObjectId, ref: 'User' },
   // Use GeoJSON for location; coordinates: [longitude, latitude]
 });
 

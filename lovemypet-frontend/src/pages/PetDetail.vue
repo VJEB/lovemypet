@@ -26,21 +26,12 @@
           />
         </div>
       </div>
-
-      <!-- Pet name and location -->
-      <div class="flex justify-between items-start mb-1">
-        <h2 class="text-2xl font-semibold text-gray-800">{{ pet.name }}</h2>
-        <div class="flex items-center text-sm text-purple-600">
-          <MapPin class="h-4 w-4 mr-1" />
-          <span>1.8km</span>
-        </div>
-      </div>
-
       <!-- Breed and adoption tag -->
       <div class="flex items-start gap-2 mb-4 flex-col">
-        <span class="text-gray-500">{{ pet.breed }}</span>
+        <span class="text-black text-xl">{{ formData.name }}</span>
+        <span class="text-gray-500">{{ formData.breed }}</span>
         <span class="bg-purple-100 text-purple-600 text-xs px-2 py-0.5 rounded"
-          >ADOPTION</span
+          >{{formData.status}}</span
         >
       </div>
 
@@ -48,10 +39,7 @@
       <div class="mb-6">
         <h3 class="font-medium text-gray-800 mb-1 text-left">Description</h3>
         <p class="text-gray-500 text-sm text-left">
-          {{ pet.description }}
-          <router-link to="#" class="text-purple-600">
-            Read More...</router-link
-          >
+          {{ formData.description }}
         </p>
       </div>
     </div>
@@ -64,23 +52,8 @@
           alt="Pet owner"
           class="w-10 h-10 rounded-full object-cover"
         />
-        <div>
-          <div class="text-xs text-gray-500 text-left">Pet Owner</div>
-          <div class="font-medium">{{ pet.owner.name }}</div>
-        </div>
       </div>
-      <div class="flex gap-2">
-        <button
-          class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center"
-        >
-          <Phone class="h-4 w-4 text-purple-600" />
-        </button>
-        <button
-          class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center"
-        >
-          <MessageSquare class="h-4 w-4 text-purple-600" />
-        </button>
-      </div>
+ 
     </div>
   </div>
 
@@ -91,18 +64,18 @@
     <button
       class="bg-purple-600 text-white rounded-full py-3 px-6 flex-1 font-medium"
     >
-      {{ pet.status }}
+      {{ formData.status }}
     </button>
-    <button
+    <!-- <button
       class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center"
     >
       <Heart class="h-6 w-6 text-gray-400" />
-    </button>
+    </button> -->
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, defineProps, onMounted   } from "vue";
 import {
   ArrowLeft,
   MoreVertical,
@@ -112,34 +85,37 @@ import {
   Heart,
 } from "lucide-vue-next";
 import Header from "../components/Header.vue";
+import { useRoute } from "vue-router";
 
 const mainImage = ref("https://placehold.co/600x400");
+const petData = ref(null);
+const route = useRoute();
+console.log("ID recibido:", route.params.id);
+const formData = ref({
+    name: "",
+    breed: "",
+    status: "",
+    description: "",
+    category: "",
+});
+
+onMounted(async () => {
+  const petId = route.params.id;
+  const response = await fetch(`http://localhost:3000/pets/${petId}`);
+  petData.value = await response.json();
+  formData.value = {       // Resetea formData a su estado inicial
+    name: petData.value.name,
+    breed: petData.value.breed,
+    status: petData.value.status,
+    description: petData.value.description,
+    category: petData.value.category,
+  };
+  console.log('PetData', petData.value)
+});
+
 const props = defineProps({
   pet: {
-    type: {
-      id: String,
-      name: String,
-      breed: String,
-      distance: String,
-      status: String,
-      images: [String],
-      description: String,
-      owner: {
-        type: {
-          profilePicture: String,
-          name: String,
-          phoneNumber: String,
-          email: String,
-        },
-      },
-    },
     default: () => ({
-      name: "Remo",
-      description: `Sed volutpat tortor est, id molestie justo venenatis cat ut. Aliquam
-                sollicitudin non risus eu viverra. Sed velit sed volutpat tortor est,
-                id molestie justo venenatis cat ut.`,
-      breed: "Russian Blue",
-      status: "ADOPTION",
       images: [
         "https://placehold.co/600x400",
         "https://placehold.co/600x400",
@@ -147,9 +123,6 @@ const props = defineProps({
         "https://placehold.co/600x400",
         "https://placehold.co/600x400",
       ],
-      owner: {
-        name: "Kristin Watson",
-      },
     }),
   },
 });

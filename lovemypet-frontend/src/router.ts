@@ -4,7 +4,9 @@ import HomeView from "./pages/MainScreen.vue";
 import DetailView from "./pages/PetDetail.vue";
 import LoginView from "./pages/Login.vue";
 import RegisterView from "./pages/Register.vue";
+import ProfileFormView from "./pages/ProfileForm.vue";
 import ProfileView from "./pages/Profile.vue";
+import PetFormView from "./pages/PetForm.vue";
 
 const isAuthenticated = () => {
   return !!localStorage.getItem('token');
@@ -24,12 +26,13 @@ const routes = [
     component: RegisterView,
   },
   {
-    path: "/details",
+    path: "/details/:id",
     component: DetailView,
   },
   {
     path: "/posts",
-    component: DetailView,
+    component: PetFormView,
+    props: true
   },
   {
     path: "/profile",
@@ -37,7 +40,7 @@ const routes = [
   },
   {
     path: "/profile/form",
-    component: RegisterView,
+    component: ProfileFormView,
   },
 ];
 

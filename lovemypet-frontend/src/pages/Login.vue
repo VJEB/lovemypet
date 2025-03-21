@@ -64,11 +64,14 @@ import { Label } from "@/components/ui/label";
 import { AlertCircle } from "lucide-vue-next";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { store } from "@/storage/user-store.ts"
+import { useRouter } from 'vue-router';
 
 const email = ref("");
 const password = ref("");
 const error = ref("");
 const isLoading = ref(false);
+
+const router = useRouter();
 
 const handleSubmit = async () => {
   error.value = "";
@@ -91,9 +94,14 @@ const handleSubmit = async () => {
     }
 
     const data = await response.json();
-    console.log(data);    
-    localStorage.setItem('token', data.token)
-    store.setUser(data.user)
+    const user = data.userData.data;
+    if(user){
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user',  JSON.stringify(user))
+      store.setUser(data.user)
+      router.push('/');
+    }    
+   
 
     // Handle successful login (e.g., save token, redirect, etc.)
   } catch (err) {

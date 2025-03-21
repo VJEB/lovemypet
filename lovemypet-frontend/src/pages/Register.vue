@@ -57,7 +57,7 @@
               required
             />
           </div>
-          <GoogleMap />
+          <!-- <GoogleMap /> -->
         </CardContent>
         <CardFooter class="flex flex-col space-y-4">
           <Button class="w-full" type="submit" :disabled="isLoading">
@@ -76,7 +76,7 @@
             class="text-sm text-center text-muted-foreground"
           >
             Already have an account?
-            <Button variant="link" class="p-0 h-auto" type="button"
+            <Button variant="link" class="p-0 h-auto" type="button" @click="goToLogin"
               >Log in</Button
             >
           </p>
@@ -101,7 +101,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-vue-next";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { store } from "@/storage/user-store.ts";
 import GoogleMap from '@/components/GoogleMap.vue'
 
@@ -113,10 +113,14 @@ const formData = ref({
 });
 
 const route = useRoute();
-
+const router = useRouter();
 const isRegistering = computed(
   () => route.path === "/auth/register" && !store.user.name
 );
+
+const goToLogin = () => {
+  router.push('/auth'); // Cambia '/login' por la ruta deseada
+};
 
 const error = ref("");
 const isLoading = ref(false);

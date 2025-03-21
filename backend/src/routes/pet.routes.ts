@@ -2,11 +2,14 @@ import { Router } from 'express';
 import * as petController from '../controllers/pet.controller.js';
 
 const router = Router();
+router.get('/pets', petController.getAllPets);
 
 router.post('/', petController.createPet);
 router.get('/:id', petController.getPet);
 router.put('/:id', petController.updatePet);
 router.delete('/:id', petController.deletePet);
-router.get('/', petController.getPetsNearby); // For fetching pets nearby
+router.post('/byOwner', petController.getPetByOwner);
+router.post('/byCategory', petController.getPetByCategory);
+
 
 export default router;

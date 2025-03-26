@@ -8,8 +8,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, phoneNumber, profilePicture } = req.body;
-    console.log('Paso aqui')
+    console.log('Paso aqui', req.body)
+    const { name, email, password, phoneNumber, profilePicture, location } = req.body;
     // Check if user exists
     let user = await User.findOne({ email });
     if (user) {
@@ -21,13 +21,13 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create new user
-    user = new User({ name, email, password: hashedPassword, phoneNumber, profilePicture });
+    user = new User({ name, email, password: hashedPassword, phoneNumber, profilePicture, location });
     await user.save();
 
     // Generate token
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
 
-    res.status(201).json({ token, user: { ...user, location: [] } });
+    res.status(201).json({ token, user: { ...user, location: user.location.coordinates } });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -57,6 +57,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
      name: user.name,
      email: user.email,
      phoneNumber: user.phoneNumber,
+     location: user.location,
     }
 
     res.json({ token, userData: { ...userData, location: [], data: infoUser} });
@@ -68,14 +69,21 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 export const getUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id);
+    const user = await User.findById(id);  
     if (!user) {
       res.status(404).json({ error: "User not found" });
       return;
     }
+    const infoUser = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      location: user.location,
+     }
     const { password: userPassword, __v, ...userData } = user;
 
-    res.status(200).json({ ...userData, location: [] });
+    res.status(200).json(infoUser);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -84,17 +92,21 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    console.log('Body Update', req.body)
     const updatedUser = await User.findByIdAndUpdate(id, req.body, {
       new: true,
     });
+    console.log('Paso aqui')
     if (!updatedUser) {
         res.status(404).json({ error: "User not found" });
         return;
     }
     const { password: userPassword, __v, ...userData } = updatedUser;
-
-    res.status(200).json({ ...userData, location: [] });
+    console.log('Aqui tambien')
+    res.status(200).json({ ...userData });
+    console.log('Paso aqui 2')
   } catch (error: any) {
+    console.log('Paso aqui error')
     res.status(500).json({ error: error.message });
   }
 };
@@ -112,3 +124,4 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({ error: error.message });
   }
 };
+

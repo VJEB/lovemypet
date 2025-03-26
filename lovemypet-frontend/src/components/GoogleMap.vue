@@ -1,19 +1,19 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, defineEmits } from "vue";
 import { Loader } from "@googlemaps/js-api-loader";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
+const emit = defineEmits(["updateLocation"]);
 const searchInput = ref(null);
 const mapElement = ref(null);
 const selectedLocation = ref(null);
 const map = ref(null);
 const marker = ref(null);
+const locationType = ref('Point'); // Definir el tipo de ubicación dinámico
 
 // Load Google Maps API
 onMounted(async () => {
   const loader = new Loader({
-    apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY, // Replace with your actual API key
+    apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     libraries: ["places"],
   });
 
@@ -22,7 +22,7 @@ onMounted(async () => {
 
   // Initialize Map
   map.value = new google.maps.Map(mapElement.value, {
-    center: { lat: 40.7128, lng: -74.006 }, // Default location (New York City)
+    center: { lat: 40.7128, lng: -74.0060 }, // Default location (New York City)
     zoom: 12,
   });
 
@@ -37,81 +37,102 @@ onMounted(async () => {
     const place = autocomplete.getPlace();
     if (!place.geometry || !place.geometry.location) return;
 
+    const lat = place.geometry.location.lat();
+    const lng = place.geometry.location.lng();
+
+    // Verifica que las coordenadas sean válidas
+    if (isNaN(lat) || isNaN(lng)) {
+      console.error("Invalid coordinates:", lat, lng);
+      return;
+    }
+
     const location = {
-      lat: place.geometry.location.lat(),
-      lng: place.geometry.location.lng(),
+      type: locationType.value,
+      coordinates: [lat, lng],
     };
 
     selectedLocation.value = location;
-    map.value.setCenter(location);
+    map.value.setCenter(location.coordinates);
 
-    // Set or update marker
+    // Emitir ubicación al componente padre
+    emit("updateLocation", location);
+
+    // Establecer o actualizar el marcador
     if (!marker.value) {
       marker.value = new google.maps.Marker({
-        position: location,
+        position: { lat, lng },
         map: map.value,
         draggable: true,
       });
 
-      // Allow user to drag marker and update location
+      // Permitir arrastrar el marcador y actualizar la ubicación
       marker.value.addListener("dragend", (event) => {
-        selectedLocation.value = {
-          lat: event.latLng.lat(),
-          lng: event.latLng.lng(),
+        const newLatLng = event.latLng;
+        const newLocation = {
+          type: locationType.value,
+          coordinates: [newLatLng.lat(), newLatLng.lng()],
         };
+        selectedLocation.value = newLocation;
+        emit("updateLocation", selectedLocation.value); // Emitir nueva ubicación
       });
     } else {
-      marker.value.setPosition(location);
+      marker.value.setPosition({ lat, lng });
     }
   });
 
-  // Handle manual click on the map
+  // Manejar clic manual en el mapa
   map.value.addListener("click", (event) => {
+    const lat = event.latLng.lat();
+    const lng = event.latLng.lng();
+
+    // Verifica que las coordenadas sean válidas
+    if (isNaN(lat) || isNaN(lng)) {
+      console.error("Invalid coordinates on click:", lat, lng);
+      return;
+    }
+
     const clickedLocation = {
-      lat: event.latLng.lat(),
-      lng: event.latLng.lng(),
+      type: locationType.value,
+      coordinates: [lat, lng],
     };
 
     selectedLocation.value = clickedLocation;
+    emit("updateLocation", clickedLocation); // Emitir ubicación clickeada
 
     if (!marker.value) {
       marker.value = new google.maps.Marker({
-        position: clickedLocation,
+        position: { lat, lng },
         map: map.value,
         draggable: true,
       });
 
       marker.value.addListener("dragend", (event) => {
-        selectedLocation.value = {
-          lat: event.latLng.lat(),
-          lng: event.latLng.lng(),
+        const newLatLng = event.latLng;
+        const updatedLocation = {
+          type: locationType.value,
+          coordinates: [newLatLng.lat(), newLatLng.lng()],
         };
+        selectedLocation.value = updatedLocation;
+        emit("updateLocation", selectedLocation.value);
       });
     } else {
-      marker.value.setPosition(clickedLocation);
+      marker.value.setPosition({ lat, lng });
     }
   });
 });
 </script>
 
+
+
 <template>
   <div>
     <div class="space-y-2">
-        <div class="flex items-center justify-between">
-          <Label for="searchInput">Location</Label>
-        </div>
-        <!-- Search Input for Google Places Autocomplete -->
-        <Input ref="searchInput" placeholder="Search location..." class="mb-4" />
+      <!-- Search Input for Google Places Autocomplete -->
+      <Input ref="searchInput" placeholder="Search location..." class="mb-4" />
     </div>
 
     <!-- Google Map Container -->
     <div ref="mapElement" class="map-container h-96 w-full"></div>
-
-    <!-- Display Selected Coordinates -->
-    <div v-if="selectedLocation" class="mt-2 text-gray-700">
-      Selected Coordinates: {{ selectedLocation.lat }},
-      {{ selectedLocation.lng }}
-    </div>
   </div>
 </template>
 

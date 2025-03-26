@@ -113,3 +113,42 @@ export const deletePet = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ error: error.message });
   }
 };
+
+/**
+ * Get pets near a given location.
+ * Query parameters:
+ *   - lat: latitude
+ *   - lng: longitude
+ *   - maxDistance: maximum distance in meters (optional, default is 5000m)
+ */
+export const getPetsNearby = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { lat, lng, maxDistance } = req.query;
+    if (!lat || !lng) {
+      res
+        .status(400)
+        .json({ error: "lat and lng query parameters are required" });
+      return;
+    }
+    const maxDist = maxDistance ? parseInt(maxDistance as string, 10) : 5000; // default 5km
+
+    const pets = await Pet.find({
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [parseFloat(lng as string), parseFloat(lat as string)],
+          },
+          $maxDistance: maxDist,
+        },
+      },
+    }).populate("owner");
+
+    res.status(200).json(pets);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};

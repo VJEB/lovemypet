@@ -10,6 +10,6 @@ router.put('/:id', petController.updatePet);
 router.delete('/:id', petController.deletePet);
 router.post('/byOwner', petController.getPetByOwner);
 router.post('/byCategory', petController.getPetByCategory);
-
+router.get('/', petController.getPetsNearby); // For fe
 
 export default router;

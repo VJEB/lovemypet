@@ -18,7 +18,6 @@
           </button>
         </div>
         <h2 class="text-xl font-bold">{{ user.name }}</h2>
-        <!-- <p class="text-gray-500 text-sm">New York, USA</p> -->
       </div>
 
       <!-- Contact Information -->
@@ -35,75 +34,77 @@
             <p class="text-sm text-gray-500">Phone Number</p>
             <p class="font-medium">{{ user.phoneNumber }}</p>
           </div>
-        </div>
-      </div>
-
-      <!-- Settings -->
-      <div class="rounded-xl border border-gray-100 overflow-hidden mb-4">
-        <div class="divide-y">
-          <router-link to="/profile/form" class="flex items-center justify-between p-2 hover:bg-gray-50">
-            <div class="flex items-center">
-              <div class="bg-purple-100 p-2 rounded-full mr-3">
-                <Pencil class="h-5 w-5 text-purple-600" />
-              </div>
-              <span>Edit profile info</span>
+          
+          <!-- Google Map with user's location -->
+          <div>
+            <p class="font-medium">Location</p>
+            <div style="margin-top: 1rem;">
+              <GoogleMapProfile :initialLocation="user.location" />
             </div>
-            <ChevronRight class="h-5 w-5 text-gray-400" />
-          </router-link>
-          <router-link to="/auth" class="flex items-center justify-between p-2 hover:bg-gray-50"
-            @click.prevent="logout">
-            <div class="flex items-center">
-              <div class="bg-red-100 p-2 rounded-full mr-3">
-                <LogOut class="h-5 w-5 text-red-600" />
-              </div>
-              <span>Log Out</span>
-            </div>
-            <ChevronRight class="h-5 w-5 text-gray-400" />
-          </router-link>
-
+          </div>
         </div>
-      </div>
-
-      <!-- Delete Account -->
-      <div class="mb-8">
-        <button @click="deleteAccount()"
-          class="w-full flex items-center justify-center gap-2 p-2 border border-red-200 rounded-xl text-red-600 hover:bg-red-50">
-          <Trash2 class="h-5 w-5" />
-          <span class="font-medium">Delete Account</span>
-        </button>
       </div>
     </div>
 
-    <!-- Bottom navigation -->
-    <BottomNavBar />
+    <!-- Settings -->
+    <div class="rounded-xl border border-gray-100 overflow-hidden mb-4">
+      <div class="divide-y">
+        <router-link to="/profile/form" class="flex items-center justify-between p-2 hover:bg-gray-50">
+          <div class="flex items-center">
+            <div class="bg-purple-100 p-2 rounded-full mr-3">
+              <Pencil class="h-5 w-5 text-purple-600" />
+            </div>
+            <span>Edit profile info</span>
+          </div>
+          <ChevronRight class="h-5 w-5 text-gray-400" />
+        </router-link>
+        <router-link to="/auth" class="flex items-center justify-between p-2 hover:bg-gray-50"
+          @click.prevent="logout">
+          <div class="flex items-center">
+            <div class="bg-red-100 p-2 rounded-full mr-3">
+              <LogOut class="h-5 w-5 text-red-600" />
+            </div>
+            <span>Log Out</span>
+          </div>
+          <ChevronRight class="h-5 w-5 text-gray-400" />
+        </router-link>
+      </div>
+    </div>
+
+    <!-- Delete Account -->
+    <div class="mb-8">
+      <button @click="deleteAccount()"
+        class="w-full flex items-center justify-center gap-2 p-2 border border-red-200 rounded-xl text-red-600 hover:bg-red-50">
+        <Trash2 class="h-5 w-5" />
+        <span class="font-medium">Delete Account</span>
+      </button>
+    </div>
   </div>
+
+  <!-- Bottom navigation -->
+  <BottomNavBar />
 </template>
 
 <script setup>
-import { ref } from "vue";
-import {
-  ArrowLeft,
-  MoreVertical,
-  Edit,
-  LogOut,
-  ChevronRight,
-  Trash2,
-  Pencil
-} from "lucide-vue-next";
-import BottomNavBar from "../components/BottomNavBar.vue";
+import { ref, onMounted } from "vue";
+import GoogleMap from '@/components/GoogleMap.vue'
 import { store } from "@/storage/user-store.ts"
 import { useRouter } from "vue-router";
+import GoogleMapProfile from "@/components/GoogleMapProfile.vue";
+import BottomNavBar from "../components/BottomNavBar.vue";
 
+// Definir variables reactivas
 const error = ref("");
 const isLoading = ref(false);
-const user = JSON.parse(localStorage.getItem('user'));
+const user = JSON.parse(localStorage.getItem('user')); // Obtener los datos del usuario desde localStorage
 const router = useRouter();
-localStorage.removeItem('dataFilter')
+// console.log('UseRdATA', user.location.coordinates[0])
+
+// Función para eliminar la cuenta
 const deleteAccount = async () => {
   error.value = "";
   isLoading.value = true;
   const user = JSON.parse(localStorage.getItem('user')) || {};
-
   try {
     const response = await fetch(`http://localhost:3000/users/${user.id}`, {
       method: "DELETE"
@@ -116,7 +117,6 @@ const deleteAccount = async () => {
     const data = await response.json();
     console.log("Account deleted succesfully:", data);
     router.push("/auth");
-    // Handle successful login (e.g., save token, redirect, etc.)
   } catch (err) {
     error.value = err.message;
   } finally {
@@ -128,7 +128,7 @@ const logout = () => {
   localStorage.removeItem("user");
   localStorage.removeItem("token");
   store.setUser(null); // Ajusta según tu store
-  router.push("/auth"); // Redirigir al login
+  router.push("/auth");
 };
 
 </script>

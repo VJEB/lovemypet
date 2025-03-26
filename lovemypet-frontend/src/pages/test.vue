@@ -5,7 +5,7 @@
         <CardTitle class="text-2xl">{{ isRegistering ? "Create an account" : "Profile data" }}</CardTitle>
         <CardDescription v-if="isRegistering">Enter your information to register</CardDescription>
       </CardHeader>
-      <form @submit.prevent="handleSubmit" enctype="multipart/form-data">
+      <form @submit.prevent="handleSubmit">
         <CardContent class="space-y-4">
           <Alert v-if="error" variant="destructive">
             <AlertCircle class="h-4 w-4" />
@@ -57,19 +57,7 @@
               required
             />
           </div>
-          <div v-if="isRegistering" class="space-y-2">
-            <div class="flex items-center justify-between">
-              <Label for="image">Profile Picture</Label>
-            </div>
-            <input
-              id="image"
-              type="file"
-              name="image"
-              @change="handleImageUpload"
-              accept="image/*"
-              class="w-full"
-            />
-          </div>
+          <!-- <GoogleMap /> -->
         </CardContent>
         <CardFooter class="flex flex-col space-y-4">
           <Button class="w-full" type="submit" :disabled="isLoading">
@@ -89,7 +77,8 @@
           >
             Already have an account?
             <Button variant="link" class="p-0 h-auto" type="button" @click="goToLogin"
-              >Log in</Button>
+              >Log in</Button
+            >
           </p>
         </CardFooter>
       </form>
@@ -123,12 +112,6 @@ const formData = ref({
   phoneNumber: store.user.phoneNumber,
 });
 
-const selectedFile = ref(null);
-
-const handleImageUpload = (e) => {
-  selectedFile.value = e.target.files[0];
-};
-
 const route = useRoute();
 const router = useRouter();
 const isRegistering = computed(
@@ -136,7 +119,7 @@ const isRegistering = computed(
 );
 
 const goToLogin = () => {
-  router.push('/auth');
+  router.push('/auth'); // Cambia '/login' por la ruta deseada
 };
 
 const error = ref("");
@@ -146,26 +129,22 @@ const handleSubmit = async () => {
   error.value = "";
   isLoading.value = true;
   try {
-    const formDataToSend = new FormData();
-    formDataToSend.append("name", formData.value.name);
-    formDataToSend.append("email", formData.value.email);
-    formDataToSend.append("password", formData.value.password);
-    formDataToSend.append("phoneNumber", formData.value.phoneNumber);
-    if (selectedFile.value) {
-      formDataToSend.append("image", selectedFile.value);
-    }
+    console.log(formData.value);
 
     const response = await fetch("http://localhost:3000/users", {
       method: "POST",
-      body: formDataToSend,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData.value),
     });
 
     if (!response.ok) {
-      throw new Error("Registration failed");
+      throw new Error("Invalid email or password");
     }
 
     const data = await response.json();
-    console.log("User created:", data);
+    console.log("Login successful:", data);
     router.push("/");
   } catch (err) {
     error.value = "Registration failed. Please try again.";

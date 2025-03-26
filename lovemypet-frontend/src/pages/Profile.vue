@@ -11,8 +11,8 @@
     <div class="px-4">
       <div class="flex flex-col items-center mb-8">
         <div class="relative mb-3">
-          <img src="https://placehold.co/100x100" alt="Profile picture"
-            class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md" />
+          <img :src="user.profilePicture || 'https://placehold.co/100x100'" alt="Profile picture"
+          class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md" />
           <button class="absolute bottom-0 right-0 bg-purple-600 text-white p-1.5 rounded-full shadow-sm">
             <Edit class="h-4 w-4" />
           </button>

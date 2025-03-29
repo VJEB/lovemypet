@@ -41,6 +41,10 @@
       </CardHeader>
       <form @submit.prevent="handleSubmit">
         <CardContent class="space-y-4">
+          <Alert v-if="error" variant="destructive">
+            <AlertCircle class="h-4 w-4" />
+            <AlertDescription>{{ error }}</AlertDescription>
+          </Alert>
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <Label for="name">Name</Label>
@@ -158,6 +162,7 @@ import { store } from "@/storage/user-store.ts";
 import GoogleMap from "@/components/GoogleMap.vue";
 import PetCard from "../components/PetCard.vue";
 import BottomNavBar from "../components/BottomNavBar.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 const user = JSON.parse(localStorage.getItem("user")) || {};
 const formData = ref({
   name: "",
@@ -197,9 +202,11 @@ const handleSubmit = async () => {
     form.append("description", formData.value.description);
     form.append("category", formData.value.category);
     form.append("owner", formData.value.owner);
-    if (selectedFile.value) {
-      form.append("image", selectedFile.value);
+    if (!selectedFile.value) {
+      error.value = "Please select an image.";
+      return;
     }
+    form.append("image", selectedFile.value);
 
     const response = await fetch(`http://localhost:3000/pets`, {
       method: "POST",

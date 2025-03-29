@@ -67,11 +67,11 @@ export const getPet = async (req: Request, res: Response): Promise<void> => {
 export const getPetByOwner = async (req: Request, res: Response): Promise<void> => {
   try {
     const pets = await Pet.find({ owner: req.body.id });
-    if (!pets || pets.length === 0) {
-      res.status(404).json({ error: "No pets found" });
-      return;
-    }
-    res.status(200).json(pets);
+    // if (!pets || pets.length === 0) {
+    //   res.status(404).json({ error: "No pets found" });
+    //   return;
+    // }
+    res.status(200).json(pets || []);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -106,6 +106,17 @@ export const getAllPets = async (req: Request, res: Response): Promise<void> => 
 export const updatePet = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    if (req.file) {
+      const params = {
+        Bucket: process.env.AWS_BUCKET_NAME!,
+        Key: `${uuidv4()}-${req.file.originalname}`,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+        ACL: 'public-read',
+      };
+      const data = await s3.upload(params).promise();
+      req.body.images = [data.Location];
+    }
     const updatedPet = await Pet.findByIdAndUpdate(id, req.body, { new: true });
     if (!updatedPet) {
       res.status(404).json({ error: "Pet not found" });

@@ -39,6 +39,10 @@
       </CardHeader>
       <form @submit.prevent="handleSubmit">
         <CardContent class="space-y-4">
+          <Alert v-if="error" variant="destructive">
+            <AlertCircle class="h-4 w-4" />
+            <AlertDescription>{{ error }}</AlertDescription>
+          </Alert>
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <Label for="name">Name</Label>
@@ -92,6 +96,17 @@
               </SelectContent>
             </Select>
           </div>
+          <div class="space-y-2">
+            <Label for="image">Image</Label>
+            <input
+              id="image"
+              type="file"
+              name="image"
+              @change="handleImageUpload"
+              accept="image/*"
+              class="w-full"
+            />
+          </div>
         </CardContent>
         <CardFooter class="flex justify-end space-x-4">
           <Button
@@ -139,21 +154,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { store } from "@/storage/user-store.ts";
-
 const router = useRouter();
 const isPetCardVisible = ref(true); // Variable para mostrar/ocultar el div de mascota
 const error = ref("");
 const isLoading = ref(false);
 const petId = computed(() => props.id);
-
+const selectedFile = ref(null);
+const handleImageUpload = (e) => {
+  selectedFile.value = e.target.files[0];
+};
 const formData = ref({
   id: "",
   name: "",
   breed: "",
   status: "",
   description: "",
-  category: "",
+  category: ""
 });
 
 const handleClick = (id) => {
@@ -184,16 +202,22 @@ const handleSubmit = async () => {
   isLoading.value = true;
   try {
     console.log(formData.value);
+    const form = new FormData();
+    form.append("id", formData.value.id);
+    form.append("name", formData.value.name);
+    form.append("breed", formData.value.breed);
+    form.append("status", formData.value.status);
+    form.append("description", formData.value.description);
+    form.append("category", formData.value.category);
+    if (selectedFile.value) {
+      form.append("image", selectedFile.value);
+    }
+
     const response = await fetch(
-      `http://localhost:3000/pets/${formData.value.id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData.value),
-      }
-    );
+      `http://localhost:3000/pets/${formData.value.id}`, {
+      method: "PUT",
+      body: form,
+    });
     isPetCardVisible.value = true;
     window.location.reload();
   } catch (err) {

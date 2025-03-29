@@ -16,8 +16,9 @@ export const upload = multer({ storage });
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, phoneNumber, location } = req.body;
+    const { name, email, password, phoneNumber, location: locationStringified } = req.body;
 
+    const location = JSON.parse(locationStringified);
     // Check if user exists
     let user = await User.findOne({ email });
     if (user) {
@@ -57,38 +58,6 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
   }
 };
 
-// export const loginUser = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const { email, password } = req.body;
-
-//     const user = await User.findOne({ email });
-//     if (!user) {
-//       res.status(400).json({ message: 'User not found.' });
-//       return;
-//     }
-
-//     const isMatch = await bcrypt.compare(password, user.password);
-//     if (!isMatch) {
-//       res.status(401).json({ message: 'Invalid credentials.' });
-//       return;
-//     }
-
-//     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
-
-//     const { password: userPassword, __v, ...userData } = user.toObject();
-//     const infoUser = {
-//       id: user._id,
-//       name: user.name,
-//       email: user.email,
-//       phoneNumber: user.phoneNumber,
-//       profilePicture: user.profilePicture,
-//     };
-
-//     res.json({ token, userData: { ...userData, location: [], data: infoUser } });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Server error', error });
-//   }
-// };
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
@@ -151,7 +120,22 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
   try {
     const { id } = req.params;
     console.log('Body Update', req.body)
-    const updatedUser = await User.findByIdAndUpdate(id, req.body, {
+    const { location: locationStringified } = req.body;
+    const location = JSON.parse(locationStringified);
+    if (req.file) {
+      const params = {
+        Bucket: process.env.AWS_BUCKET_NAME!,
+        Key: `${uuidv4()}-${req.file.originalname}`,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+        ACL: 'public-read',
+      };
+
+      const data = await s3.upload(params).promise();
+      req.body.profilePicture = data.Location;
+    }
+    delete req.body.password
+    const updatedUser = await User.findByIdAndUpdate(id, {...req.body, location}, {
       new: true,
     });
     console.log('Paso aqui')

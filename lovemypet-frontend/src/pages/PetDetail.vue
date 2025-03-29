@@ -6,14 +6,14 @@
     <div class="shadow-lg p-4 mt-6 rounded-md">
       <div class="rounded-lg overflow-hidden my-3">
         <img
-          :src="pet.images[0]"
+          :src="petData?.images[0] || 'https://placehold.co/600x400'"
           alt="Remo the bird"
           class="w-full h-64 object-cover"
         />
       </div>
 
       <!-- Thumbnails -->
-      <div class="flex gap-2 mb-4 overflow-x-auto pb-1">
+      <!-- <div class="flex gap-2 mb-4 overflow-x-auto pb-1">
         <div
           v-for="url in pet.images"
           :key="url"
@@ -25,7 +25,7 @@
             class="w-[60px] h-[60px] object-cover"
           />
         </div>
-      </div>
+      </div> -->
       <!-- Pet name and location -->
       <div class="flex justify-between items-start mb-1">
         <h2 class="text-2xl font-semibold text-gray-800">{{ pet.name }}</h2>
@@ -64,7 +64,7 @@
     >
       <div class="flex items-center gap-3">
         <img
-          src="https://placehold.co/600x400"
+          :src="userData?.profilePicture || 'https://placehold.co/600x400'"
           alt="Pet owner"
           class="w-10 h-10 rounded-full object-cover"
         />

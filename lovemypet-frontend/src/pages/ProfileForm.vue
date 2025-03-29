@@ -53,6 +53,19 @@
           <GoogleMapProfile
             @updateLocation="(location) => (formData.location = location)"
           />
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <Label for="image">Profile Picture</Label>
+            </div>
+            <input
+              id="image"
+              type="file"
+              name="image"
+              @change="handleImageUpload"
+              accept="image/*"
+              class="w-full"
+            />
+          </div>
           <!-- <GoogleMap /> -->
         </CardContent>
         <CardFooter class="flex justify-end space-x-4">
@@ -113,7 +126,11 @@ const isLoading = ref(false);
 const redirectBack = () => {
   router.push("/profile"); // Cambia '/login' por la ruta deseada
 };
+const selectedFile = ref(null);
 
+const handleImageUpload = (e) => {
+  selectedFile.value = e.target.files[0];
+};
 const handleSubmit = async () => {
   error.value = "";
   isLoading.value = true;
@@ -125,18 +142,33 @@ const handleSubmit = async () => {
       coordinates: formData.value.location.coordinates, // Coordinates are always present
     };
     formData.value.location = location; // Update location in formData
+
+    const formDataToSend = new FormData();
+    formDataToSend.append("id", formData.value.id);
+    formDataToSend.append("name", formData.value.name);
+    formDataToSend.append("email", formData.value.email);
+    formDataToSend.append("phoneNumber", formData.value.phoneNumber);
+    formDataToSend.append("location", JSON.stringify(formData.value.location));
+    if (selectedFile.value) {
+      formDataToSend.append("image", selectedFile.value);
+    }
     const response = await fetch(`http://localhost:3000/users/${user.id}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData.value),
+      body: formDataToSend,
     });
     console.log("Value 2");
     localStorage.removeItem("user");
-    localStorage.setItem("user", JSON.stringify(formData.value));
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        ...formData.value,
+        profilePicture: (await response.json())._doc.profilePicture,
+      })
+    );
     router.push("/profile");
   } catch (err) {
+    console.log(err);
+
     error.value = "Update failed. Please try again.";
   } finally {
     isLoading.value = false;

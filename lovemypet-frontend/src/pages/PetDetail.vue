@@ -1,18 +1,29 @@
 <template>
-  <div class="max-w-md mx-auto bg-white min-h-screen relative">
+  <div class="max-w-md mx-auto bg-white min-h-screen relative pb-36">
     <!-- Header -->
     <Header />
 
     <div class="shadow-lg p-4 mt-6 rounded-md">
       <div class="rounded-lg overflow-hidden my-3">
-        <img :src="pet.images[0]" alt="Remo the bird" class="w-full h-64 object-cover" />
+        <img
+          :src="pet.images[0]"
+          alt="Remo the bird"
+          class="w-full h-64 object-cover"
+        />
       </div>
 
       <!-- Thumbnails -->
       <div class="flex gap-2 mb-4 overflow-x-auto pb-1">
-        <div v-for="url in pet.images" :key="url"
-          class="flex-shrink-0 rounded-lg overflow-hidden border border-gray-200">
-          <img :src="url" :alt="`Pet thumbnail ${url}`" class="w-[60px] h-[60px] object-cover" />
+        <div
+          v-for="url in pet.images"
+          :key="url"
+          class="flex-shrink-0 rounded-lg overflow-hidden border border-gray-200"
+        >
+          <img
+            :src="url"
+            :alt="`Pet thumbnail ${url}`"
+            class="w-[60px] h-[60px] object-cover"
+          />
         </div>
       </div>
       <!-- Pet name and location -->
@@ -21,14 +32,17 @@
         <div class="flex items-center text-sm text-purple-600">
           <MapPin class="h-4 w-4 mr-1" />
           <span>{{ isNaN(formData.distance) ? 0 : formData.distance }}</span>
-        </div>  
+        </div>
       </div>
 
       <!-- Breed and adoption tag -->
       <div class="flex items-start gap-2 mb-4 flex-col">
         <span class="text-black text-xl">{{ formData.name }}</span>
         <span class="text-gray-500">{{ formData.breed }}</span>
-        <span class="bg-purple-100 text-purple-600 text-xs px-2 py-0.5 rounded">{{ formData.status }}</span>
+        <span
+          class="bg-purple-100 text-purple-600 text-xs px-2 py-0.5 rounded"
+          >{{ formData.status }}</span
+        >
       </div>
 
       <!-- Description -->
@@ -41,15 +55,13 @@
     </div>
   </div>
 
-  <div
-      class="bg-gray-50 p-3 rounded-lg flex items-center justify-between mb-6 shadow-lg mt-4"
-    >
-     
-    </div>
-  
   <!-- Bottom action buttons -->
-  <div class="fixed bottom-4 left-0 right-0 p-4 bg-white flex gap-3 max-w-md mx-auto">
-    <div class="bg-gray-50 p-3 rounded-lg flex items-center justify-between mb-6 shadow-lg mt-4">
+  <div
+    class="fixed bottom-4 left-0 right-0 p-4 bg-white flex gap-3 max-w-md mx-auto"
+  >
+    <div
+      class="flex-grow bg-gray-50 p-3 rounded-lg flex items-center justify-between mb-6 shadow-lg mt-4"
+    >
       <div class="flex items-center gap-3">
         <img
           src="https://placehold.co/600x400"
@@ -58,19 +70,12 @@
         />
         <div>
           <div class="text-xs text-gray-500 text-left">Pet Owner</div>
-          <div class="font-medium">{{ formData.user}}</div>
+          <div class="font-medium">{{ formData.user }}</div>
         </div>
         <div>
           <div class="text-xs text-gray-500 text-left">Phone Number</div>
-          <div class="font-medium">{{ formData.phoneNumber}}</div>
+          <div class="font-medium">{{ formData.phoneNumber }}</div>
         </div>
-      </div>
-      <div class="flex ml-4">
-        <div
-          class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center"
-        >
-          <UserCircle class="h-4 w-4 text-purple-600" />
-      </div>
       </div>
     </div>
   </div>
@@ -103,7 +108,7 @@ const formData = ref({
   category: "",
   user: "",
   phoneNumber: "",
-  distance: 0
+  distance: 0,
 });
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -120,8 +125,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
   const a =
     Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) *
-    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -132,7 +136,7 @@ onMounted(async () => {
   const petId = route.params.id;
 
   // Obtener usuario logueado desde localStorage
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem("user"));
   userLocation.value = user.location; // Suponiendo que contiene { lat, lng }
 
   // Obtener datos de la mascota
@@ -140,7 +144,9 @@ onMounted(async () => {
   petData.value = await response.json();
 
   // Obtener datos del dueño de la mascota
-  const userResponse = await fetch(`http://localhost:3000/users/${petData.value.owner}`);
+  const userResponse = await fetch(
+    `http://localhost:3000/users/${petData.value.owner}`
+  );
   userData.value = await userResponse.json();
 
   // Asignar datos al formulario
@@ -151,17 +157,19 @@ onMounted(async () => {
     description: petData.value.description,
     category: petData.value.category,
     user: userData.value.name,
-    phoneNumber: userData.value.phoneNumber
+    phoneNumber: userData.value.phoneNumber,
   };
 
-  console.log('UserLocation', userLocation.value)
-  console.log('UserLocationOwner', userData.value.location)
+  console.log("UserLocation", userLocation.value);
+  console.log("UserLocationOwner", userData.value.location);
 
   // Verificar que ambas ubicaciones existen antes de calcular la distancia
   if (userLocation.value && userData.value.location) {
     formData.value.distance = calculateDistance(
-      userLocation.value.coordinates[0], userLocation.value.coordinates[1],
-      userData.value.location.coordinates[0], userData.value.location.coordinates[1]
+      userLocation.value.coordinates[0],
+      userLocation.value.coordinates[1],
+      userData.value.location.coordinates[0],
+      userData.value.location.coordinates[1]
     );
   }
 });

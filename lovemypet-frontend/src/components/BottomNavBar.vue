@@ -1,6 +1,9 @@
 <template>
   <div
-    class="fixed bottom-0 left-0 w-[100%] bg-white border-t border-gray-200 flex justify-around items-center py-2"
+    class="fixed bottom-0 left-0 w-[100%] 
+      md:w-20 md:h-full md:top-0 md:border-t-0 md:border-r 
+      bg-white border-t border-gray-200 flex md:flex-col 
+      justify-around items-center py-2"
   >
     <router-link to="/" class="flex flex-col items-center p-2">
       <Home

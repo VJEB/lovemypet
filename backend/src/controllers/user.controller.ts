@@ -14,6 +14,56 @@ const s3 = new AWS.S3();
 const storage = multer.memoryStorage();
 export const upload = multer({ storage });
 
+/**
+ * @swagger
+ * /users/register:
+ *   post:
+ *     summary: Register a new user
+ *     description: Creates a new user account with an optional profile picture upload
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: User's full name
+ *               email:
+ *                 type: string
+ *                 description: User's email address
+ *               password:
+ *                 type: string
+ *                 description: User's password
+ *               phoneNumber:
+ *                 type: string
+ *                 description: User's phone number
+ *               location:
+ *                 type: string
+ *                 description: JSON string of GeoJSON Point (e.g., '{"type": "Point", "coordinates": [-73.935242, 40.730610]}')
+ *               profilePicture:
+ *                 type: string
+ *                 format: binary
+ *                 description: Optional profile picture file
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: JWT token for authentication
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: User already exists
+ *       500:
+ *         description: Server error
+ */
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password, phoneNumber, location: locationStringified } = req.body;
@@ -58,6 +108,45 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
   }
 };
 
+/**
+ * @swagger
+ * /users/login:
+ *   post:
+ *     summary: Login a user
+ *     description: Authenticates a user and returns a JWT token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: User's email address
+ *               password:
+ *                 type: string
+ *                 description: User's password
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: JWT token for authentication
+ *                 userData:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: User not found
+ *       401:
+ *         description: Invalid credentials
+ *       500:
+ *         description: Server error
+ */
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
@@ -92,6 +181,31 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+/**
+ * @swagger
+ * /users/{id}:
+ *   get:
+ *     summary: Get a user by ID
+ *     description: Retrieves a user's details by their ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user's ID
+ *     responses:
+ *       200:
+ *         description: User found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
 export const getUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
@@ -116,6 +230,69 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+/**
+ * @swagger
+ * /users/{id}:
+ *   put:
+ *     summary: Update a user
+ *     description: Updates a user's details by their ID, with optional profile picture upload to AWS S3
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user's ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: User's full name
+ *               email:
+ *                 type: string
+ *                 description: User's email address
+ *               phoneNumber:
+ *                 type: string
+ *                 description: User's phone number
+ *               location:
+ *                 type: string
+ *                 description: JSON string of GeoJSON Point (e.g., '{"type": "Point", "coordinates": [-73.935242, 40.730610]}')
+ *               profilePicture:
+ *                 type: string
+ *                 format: binary
+ *                 description: Optional new profile picture file (uploaded to S3)
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: User not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
@@ -153,6 +330,50 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
+/**
+ * @swagger
+ * /users/{id}:
+ *   delete:
+ *     summary: Delete a user
+ *     description: Deletes a user by their ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user's ID
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User deleted successfully
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: User not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;

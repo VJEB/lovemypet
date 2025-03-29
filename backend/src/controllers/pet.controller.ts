@@ -11,6 +11,53 @@ const s3 = new AWS.S3();
 const storage = multer.memoryStorage();
 export const upload = multer({ storage });
 
+/**
+ * @swagger
+ * /pets:
+ *   post:
+ *     summary: Create a new pet
+ *     description: Creates a new pet entry with an optional image upload
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Pet's name
+ *               breed:
+ *                 type: string
+ *                 description: Pet's breed
+ *               status:
+ *                 type: string
+ *                 description: Pet's status (e.g., available, adopted)
+ *               category:
+ *                 type: string
+ *                 description: Pet's category (e.g., dog, cat)
+ *               description:
+ *                 type: string
+ *                 description: Pet's description
+ *               owner:
+ *                 type: string
+ *                 description: ID of the pet's owner
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Optional image file for the pet
+ *     responses:
+ *       201:
+ *         description: Pet created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Pet'
+ *       404:
+ *         description: Owner not found
+ *       500:
+ *         description: Server error
+ */
 export const createPet = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, breed, status, category, description, owner } = req.body;
@@ -50,6 +97,46 @@ export const createPet = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+/**
+ * @swagger
+ * /pets/{id}:
+ *   get:
+ *     summary: Get a pet by ID
+ *     description: Retrieves a pet's details by its ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The pet's ID
+ *     responses:
+ *       200:
+ *         description: Pet found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Pet'
+ *       404:
+ *         description: Pet not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Pet not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
 export const getPet = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
@@ -64,6 +151,43 @@ export const getPet = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+/**
+ * @swagger
+ * /pets/owner:
+ *   post:
+ *     summary: Get pets by owner
+ *     description: Retrieves all pets owned by a specific user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *                 description: The owner's ID
+ *             required:
+ *               - id
+ *     responses:
+ *       200:
+ *         description: List of pets owned by the user (empty array if none found)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Pet'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
 export const getPetByOwner = async (req: Request, res: Response): Promise<void> => {
   try {
     const pets = await Pet.find({ owner: req.body.id });
@@ -77,6 +201,57 @@ export const getPetByOwner = async (req: Request, res: Response): Promise<void> 
   }
 };
 
+/**
+ * @swagger
+ * /pets/category:
+ *   post:
+ *     summary: Get pets by category and status
+ *     description: Retrieves all pets of a specific category and status
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               category:
+ *                 type: string
+ *                 description: The pet category (e.g., dog, cat)
+ *               status:
+ *                 type: string
+ *                 description: The pet status (e.g., available, adopted)
+ *             required:
+ *               - category
+ *               - status
+ *     responses:
+ *       200:
+ *         description: List of pets matching the category and status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Pet'
+ *       404:
+ *         description: No pets found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No pets found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
 export const getPetByCategory = async (req: Request, res: Response): Promise<void> => {
   try {
     const pets = await Pet.find({ category: req.body.category, status: req.body.status });
@@ -90,6 +265,41 @@ export const getPetByCategory = async (req: Request, res: Response): Promise<voi
   }
 };
 
+/**
+ * @swagger
+ * /pets:
+ *   get:
+ *     summary: Get all pets
+ *     description: Retrieves a list of all pets
+ *     responses:
+ *       200:
+ *         description: List of all pets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Pet'
+ *       404:
+ *         description: No pets found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No pets found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
 export const getAllPets = async (req: Request, res: Response): Promise<void> => {
   try {
     const pets = await Pet.find();
@@ -103,6 +313,72 @@ export const getAllPets = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
+/**
+ * @swagger
+ * /pets/{id}:
+ *   put:
+ *     summary: Update a pet
+ *     description: Updates a pet's details by its ID, with optional image upload to AWS S3
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The pet's ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Pet's name
+ *               breed:
+ *                 type: string
+ *                 description: Pet's breed
+ *               status:
+ *                 type: string
+ *                 description: Pet's status
+ *               category:
+ *                 type: string
+ *                 description: Pet's category
+ *               description:
+ *                 type: string
+ *                 description: Pet's description
+ *               images:
+ *                 type: string
+ *                 format: binary
+ *                 description: Optional new image file for the pet (uploaded to S3)
+ *     responses:
+ *       200:
+ *         description: Pet updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Pet'
+ *       404:
+ *         description: Pet not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Pet not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
 export const updatePet = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
@@ -128,6 +404,50 @@ export const updatePet = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+/**
+ * @swagger
+ * /pets/{id}:
+ *   delete:
+ *     summary: Delete a pet
+ *     description: Deletes a pet by its ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The pet's ID
+ *     responses:
+ *       200:
+ *         description: Pet deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Pet deleted successfully
+ *       404:
+ *         description: Pet not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Pet not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
 export const deletePet = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
@@ -143,11 +463,43 @@ export const deletePet = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * Get pets near a given location.
- * Query parameters:
- *   - lat: latitude
- *   - lng: longitude
- *   - maxDistance: maximum distance in meters (optional, default is 5000m)
+ * @swagger
+ * /pets/nearby:
+ *   get:
+ *     summary: Get pets near a location
+ *     description: Retrieves pets within a specified distance from a given latitude and longitude
+ *     parameters:
+ *       - in: query
+ *         name: lat
+ *         required: true
+ *         schema:
+ *           type: number
+ *         description: Latitude of the location
+ *       - in: query
+ *         name: lng
+ *         required: true
+ *         schema:
+ *           type: number
+ *         description: Longitude of the location
+ *       - in: query
+ *         name: maxDistance
+ *         required: false
+ *         schema:
+ *           type: number
+ *         description: Maximum distance in meters (default: 5000)
+ *     responses:
+ *       200:
+ *         description: List of nearby pets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Pet'
+ *       400:
+ *         description: Missing lat or lng parameters
+ *       500:
+ *         description: Server error
  */
 export const getPetsNearby = async (
   req: Request,

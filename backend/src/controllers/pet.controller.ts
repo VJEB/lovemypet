@@ -1,17 +1,37 @@
+
 import { Request, Response } from "express";
 import Pet from "../models/pet.model.js";
 import User from "../models/user.model.js";
+import AWS from 'aws-sdk';
+import multer from 'multer';
+import { v4 as uuidv4 } from 'uuid';
+import mongoose from 'mongoose';
+
+const s3 = new AWS.S3();
+const storage = multer.memoryStorage();
+export const upload = multer({ storage });
 
 export const createPet = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, breed, status, category, description, owner } =
-      req.body;
-    console.log('Bodu', req.body)
-    // Validate that the owner (user) exists
-    const user = await User.findById(owner);
+    const { name, breed, status, category, description, owner } = req.body;
+    let imageUrl = '';
+
+    const user = await User.findById(new mongoose.Types.ObjectId(owner));
     if (!user) {
       res.status(404).json({ error: "Owner (User) not found" });
       return;
+    }
+
+    if (req.file) {
+      const params = {
+        Bucket: process.env.AWS_BUCKET_NAME!,
+        Key: `${uuidv4()}-${req.file.originalname}`,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+        ACL: 'public-read',
+      };
+      const data = await s3.upload(params).promise();
+      imageUrl = data.Location;
     }
 
     const pet = new Pet({
@@ -21,6 +41,7 @@ export const createPet = async (req: Request, res: Response): Promise<void> => {
       description,
       category,
       owner,
+      images: imageUrl ? [imageUrl] : [] // Guarda como arreglo si existe
     });
     await pet.save();
     res.status(201).json(pet);
@@ -31,7 +52,6 @@ export const createPet = async (req: Request, res: Response): Promise<void> => {
 
 export const getPet = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Entro find pet')
     const { id } = req.params;
     const pet = await Pet.findById(id);
     if (!pet) {
@@ -46,10 +66,9 @@ export const getPet = async (req: Request, res: Response): Promise<void> => {
 
 export const getPetByOwner = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Entro owner', req.body)
     const pets = await Pet.find({ owner: req.body.id });
-    if (!pets) {
-      res.status(404).json({ error: "Pet not found ddd" });
+    if (!pets || pets.length === 0) {
+      res.status(404).json({ error: "No pets found" });
       return;
     }
     res.status(200).json(pets);
@@ -60,10 +79,9 @@ export const getPetByOwner = async (req: Request, res: Response): Promise<void> 
 
 export const getPetByCategory = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Entro category', req.body)
     const pets = await Pet.find({ category: req.body.category, status: req.body.status });
-    if (!pets) {
-      res.status(404).json({ error: "Pet not found ddd" });
+    if (!pets || pets.length === 0) {
+      res.status(404).json({ error: "No pets found" });
       return;
     }
     res.status(200).json(pets);
@@ -74,13 +92,12 @@ export const getPetByCategory = async (req: Request, res: Response): Promise<voi
 
 export const getAllPets = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Entro getAll');
-    const pets = await Pet.find();  // Obtener todas las mascotas desde la base de datos
+    const pets = await Pet.find();
     if (!pets || pets.length === 0) {
       res.status(404).json({ error: "No pets found" });
       return;
     }
-    res.status(200).json(pets);  // Enviar todas las mascotas como respuesta
+    res.status(200).json(pets);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -89,12 +106,12 @@ export const getAllPets = async (req: Request, res: Response): Promise<void> => 
 export const updatePet = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const pet = await Pet.findByIdAndUpdate(id, req.body, { new: true });
-    if (!pet) {
+    const updatedPet = await Pet.findByIdAndUpdate(id, req.body, { new: true });
+    if (!updatedPet) {
       res.status(404).json({ error: "Pet not found" });
       return;
     }
-    res.status(200).json(pet);
+    res.status(200).json(updatedPet);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -103,8 +120,8 @@ export const updatePet = async (req: Request, res: Response): Promise<void> => {
 export const deletePet = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const pet = await Pet.findByIdAndDelete(id);
-    if (!pet) {
+    const deletedPet = await Pet.findByIdAndDelete(id);
+    if (!deletedPet) {
       res.status(404).json({ error: "Pet not found" });
       return;
     }

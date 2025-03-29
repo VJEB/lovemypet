@@ -12,7 +12,7 @@
       <div class="flex flex-col items-center mb-8">
         <div class="relative mb-3">
           <img
-            src="https://placehold.co/100x100"
+            :src="user.profilePicture || 'https://placehold.co/100x100'"
             alt="Profile picture"
             class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
           />

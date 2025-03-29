@@ -88,7 +88,7 @@ const handleSubmit = async () => {
         <CardTitle class="text-2xl">{{ isRegistering ? "Create an account" : "Profile data" }}</CardTitle>
         <CardDescription v-if="isRegistering">Enter your information to register</CardDescription>
       </CardHeader>
-      <form @submit.prevent="handleSubmit">
+      <form @submit.prevent="handleSubmit" enctype="multipart/form-data">
         <CardContent class="space-y-4">
           <Alert v-if="error" variant="destructive">
             <AlertCircle class="h-4 w-4" />
@@ -147,6 +147,19 @@ const handleSubmit = async () => {
           </div>
           <!-- Include Google Map component -->
           <GoogleMap @updateLocation="location => formData.location = location" />
+            <div v-if="isRegistering" class="space-y-2">
+            <div class="flex items-center justify-between">
+              <Label for="image">Profile Picture</Label>
+            </div>
+            <input
+              id="image"
+              type="file"
+              name="image"
+              @change="handleImageUpload"
+              accept="image/*"
+              class="w-full"
+            />
+          </div>
         </CardContent>
         <CardFooter class="flex flex-col space-y-4">
           <Button class="w-full" type="submit" :disabled="isLoading">
@@ -169,3 +182,83 @@ const handleSubmit = async () => {
     </Card>
   </div>
 </template>
+
+<script setup>
+import { ref, computed } from "vue";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-vue-next";
+import { useRoute, useRouter } from "vue-router";
+import { store } from "@/storage/user-store.ts";
+import GoogleMap from '@/components/GoogleMap.vue'
+
+const formData = ref({
+  name: store.user.name,
+  email: store.user.email,
+  password: "",
+  phoneNumber: store.user.phoneNumber,
+  location: store.user.location
+});
+
+const selectedFile = ref(null);
+
+const handleImageUpload = (e) => {
+  selectedFile.value = e.target.files[0];
+};
+
+const route = useRoute();
+const router = useRouter();
+const isRegistering = computed(
+  () => route.path === "/auth/register" && !store.user.name
+);
+
+const goToLogin = () => {
+  router.push('/auth');
+};
+
+const error = ref("");
+const isLoading = ref(false);
+
+const handleSubmit = async () => {
+  error.value = "";
+  isLoading.value = true;
+  try {
+    const formDataToSend = new FormData();
+    formDataToSend.append("name", formData.value.name);
+    formDataToSend.append("email", formData.value.email);
+    formDataToSend.append("password", formData.value.password);
+    formDataToSend.append("phoneNumber", formData.value.phoneNumber);
+    formDataToSend.append("location", formData.value.location);
+    if (selectedFile.value) {
+      formDataToSend.append("image", selectedFile.value);
+    }
+
+    const response = await fetch("http://localhost:3000/users", {
+      method: "POST",
+      body: formDataToSend,
+    });
+
+    if (!response.ok) {
+      throw new Error("Registration failed");
+    }
+
+    const data = await response.json();
+    console.log("User created:", data);
+    router.push("/");
+  } catch (err) {
+    error.value = "Registration failed. Please try again.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+</script>

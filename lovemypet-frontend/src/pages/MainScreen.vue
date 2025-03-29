@@ -13,7 +13,7 @@
       :description="pet.description"
       :category="pet.category"
       :petView="false"
-      :image="'https://placehold.co/600x400'"
+      :image="pet.images?.[0] || 'https://placehold.co/600x400'"
     />
   </div>
   <div 

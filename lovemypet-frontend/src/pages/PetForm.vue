@@ -27,7 +27,7 @@
       :description="pet.description"
       :category="pet.category"
       :petView="true"
-      :image="'https://placehold.co/600x400'"
+      :image="pet.images?.[0] || 'https://placehold.co/600x400'"
     />
   </div>
 
@@ -94,6 +94,17 @@
               </SelectContent>
             </Select>
           </div>
+          <div class="space-y-2">
+            <Label for="image">Image</Label>
+            <input
+              id="image"
+              type="file"
+              name="image"
+              @change="handleImageUpload"
+              accept="image/*"
+              class="w-full"
+            />
+          </div>
           <!-- <GoogleMap /> -->
         </CardContent>
         <CardFooter class="flex justify-end space-x-4">
@@ -142,13 +153,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-vue-next";
 import { useRoute, useRouter } from "vue-router";
 import { store } from "@/storage/user-store.ts";
 import GoogleMap from "@/components/GoogleMap.vue";
 import PetCard from "../components/PetCard.vue";
-import BottomAddPet from "../components/BottomAddPet.vue";
 import BottomNavBar from "../components/BottomNavBar.vue";
 const user = JSON.parse(localStorage.getItem("user")) || {};
 const formData = ref({
@@ -160,12 +168,15 @@ const formData = ref({
   owner: user.id,
 });
 
-const pets = ref([]);
+const selectedFile = ref(null);
+const handleImageUpload = (e) => {
+  selectedFile.value = e.target.files[0];
+};
 
+const pets = ref([]);
 const isPetCardVisible = ref(true);
 const route = useRoute();
 const router = useRouter();
-
 const error = ref("");
 const isLoading = ref(false);
 
@@ -179,12 +190,20 @@ const handleSubmit = async () => {
   isLoading.value = true;
   try {
     console.log(formData.value);
+    const form = new FormData();
+    form.append("name", formData.value.name);
+    form.append("breed", formData.value.breed);
+    form.append("status", formData.value.status);
+    form.append("description", formData.value.description);
+    form.append("category", formData.value.category);
+    form.append("owner", formData.value.owner);
+    if (selectedFile.value) {
+      form.append("image", selectedFile.value);
+    }
+
     const response = await fetch(`http://localhost:3000/pets`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData.value),
+      body: form,
     });
     fetchPets();
     isPetCardVisible.value = true;
@@ -195,7 +214,6 @@ const handleSubmit = async () => {
   }
 };
 
-// Obtener las mascotas desde el backend
 const fetchPets = async () => {
   isLoading.value = true;
   error.value = ""; // Limpiar cualquier error previo
@@ -230,6 +248,7 @@ const handlePrimaryClick = () => {
     category: "",
     owner: user.id,
   };
+  selectedFile.value = null;
 };
 
 onMounted(() => {
